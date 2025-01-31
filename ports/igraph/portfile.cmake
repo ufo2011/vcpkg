@@ -4,20 +4,23 @@
 #  - The release tarball contains pre-generated parser sources, which eliminates the dependency on bison/flex.
 
 vcpkg_download_distfile(ARCHIVE
-    URLS "https://github.com/igraph/igraph/releases/download/0.9.7/igraph-0.9.7.tar.gz"
-    FILENAME "igraph-0.9.7.tar.gz"
-    SHA512 8c1841bef3e27b2c0cf895d40afa4f2ff055d65a86263c3f55697b56c0100b6fd897c805294c842f65988236850bbdb9074bcbd3297b0cb27c8851e5af9ba317
+    URLS "https://github.com/igraph/igraph/releases/download/0.10.15/igraph-0.10.15.tar.gz"
+    FILENAME "igraph-0.10.15.tar.gz"
+    SHA512 bf9f0f2f62618cf037bdbbf2e126d27ec4e45edfb65efcf26df3fc1fb71a3e1f05a8b9a62f972650d96daa1e7bd3f2a084fe39bbca42e808cc737165514276e0
 )
 
-vcpkg_extract_source_archive_ex(
-    OUT_SOURCE_PATH SOURCE_PATH
+vcpkg_extract_source_archive(
+    SOURCE_PATH
     ARCHIVE ${ARCHIVE}
+    PATCHES
+      "glpk-uwp.patch" # patch GLPK for UWP compatibility
+      "constant-nan.patch" # Workaround https://developercommunity.visualstudio.com/t/NAN-is-no-longer-compile-time-constant-i/10688907
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
-    graphml   IGRAPH_GRAPHML_SUPPORT
-    openmp    IGRAPH_OPENMP_SUPPORT
+        graphml         IGRAPH_GRAPHML_SUPPORT
+        openmp          IGRAPH_OPENMP_SUPPORT
 )
 
 # Allow cross-compilation. See https://igraph.org/c/html/latest/igraph-Installation.html#igraph-Installation-cross-compiling
@@ -38,18 +41,17 @@ vcpkg_cmake_configure(
         -DIGRAPH_ENABLE_LTO=AUTO
         # ARPACK not yet available in vcpkg.
         -DIGRAPH_USE_INTERNAL_ARPACK=ON
-        # OpenBLAS provides BLAS/LAPACK but some tests fail with OpenBLAS on Windows.
-        # See https://github.com/igraph/igraph/issues/1491
-        -DIGRAPH_USE_INTERNAL_BLAS=ON
-        -DIGRAPH_USE_INTERNAL_LAPACK=ON
-        -DIGRAPH_USE_INTERNAL_CXSPARSE=OFF
         # GLPK is not yet available in vcpkg.
         -DIGRAPH_USE_INTERNAL_GLPK=ON
         # Currently, external GMP provides no performance or functionality benefits.
         -DIGRAPH_USE_INTERNAL_GMP=ON
         # PLFIT is not yet available in vcpkg.
         -DIGRAPH_USE_INTERNAL_PLFIT=ON
+        # Use BLAS and LAPACK from vcpkg
+        -DIGRAPH_USE_INTERNAL_BLAS=OFF
+        -DIGRAPH_USE_INTERNAL_LAPACK=OFF
         -DF2C_EXTERNAL_ARITH_HEADER=${ARITH_H}
+        -DIGRAPH_WARNINGS_AS_ERRORS=OFF
         ${FEATURE_OPTIONS}
 )
 

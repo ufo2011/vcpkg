@@ -1,19 +1,38 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO HappySeaFox/sail
-    REF v0.9.0-pre20
-    SHA512 e11e05a452b62d6ad3d4c464994f410aa4829660003299b2d75910f0e089bde52bac73cf46b1be00524b157e059607867765f90615a6f5090c6106f12589dbb8
+    REF "v${VERSION}"
+    SHA512 7c6af5a381535515882dbbecf988a3cb10d2859e71084b8c9eeefac8a546df38c1438ac741535db668e8a6da09185e04ef016f71dffec297d4f5a8764653dff8
     HEAD_REF master
+    PATCHES
+        fix-include-directory.patch
 )
+
+# Enable selected codecs
+set(ONLY_CODECS "")
+
+foreach(CODEC avif bmp gif ico jpeg jpeg2000 jpegxl pcx png psd qoi svg tga tiff wal webp xbm)
+    if (${CODEC} IN_LIST FEATURES)
+        list(APPEND ONLY_CODECS ${CODEC})
+    endif()
+endforeach()
+
+list(JOIN ONLY_CODECS "\;" ONLY_CODECS_ESCAPED)
+
+# Enable OpenMP
+if ("openmp" IN_LIST FEATURES)
+    set(SAIL_ENABLE_OPENMP ON)
+endif()
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
-
     OPTIONS
+        -DBUILD_TESTING=OFF
         -DSAIL_COMBINE_CODECS=ON
+        -DSAIL_ENABLE_OPENMP=${SAIL_ENABLE_OPENMP}
+        -DSAIL_ONLY_CODECS=${ONLY_CODECS_ESCAPED}
         -DSAIL_BUILD_APPS=OFF
         -DSAIL_BUILD_EXAMPLES=OFF
-        -DSAIL_BUILD_TESTS=OFF
 )
 
 vcpkg_cmake_install()
@@ -21,8 +40,8 @@ vcpkg_cmake_install()
 vcpkg_copy_pdbs()
 
 # Remove duplicate files
-file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include
-                    ${CURRENT_PACKAGES_DIR}/debug/share)
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include"
+                    "${CURRENT_PACKAGES_DIR}/debug/share")
 
 # Move cmake configs
 vcpkg_cmake_config_fixup(PACKAGE_NAME sail       CONFIG_PATH lib/cmake/sail       DO_NOT_DELETE_PARENT_CONFIG_PATH)
@@ -38,11 +57,11 @@ file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/lib/cmake"
 # Fix pkg-config files
 vcpkg_fixup_pkgconfig()
 
-# Unused because SAIL_COMBINE_CODECS is On
-vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/include/sail/sail-common/config.h" "#define SAIL_CODECS_PATH \"${CURRENT_PACKAGES_DIR}/lib/sail/codecs\"" "")
+# Unused because SAIL_COMBINE_CODECS is ON, removes an absolute path from the output
+vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/include/sail-common/config.h" "#define SAIL_CODECS_PATH [^\r\n]+[\r\n]*" "" REGEX)
 
 # Handle usage
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
 
 # Handle copyright
-file(INSTALL "${SOURCE_PATH}/LICENSE.txt" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE.txt")

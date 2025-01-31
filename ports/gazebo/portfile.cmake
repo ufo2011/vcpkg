@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO osrf/gazebo
-    REF 382dcc3f36095a8d79b5bc9c8b8ad346e867c51d
-    SHA512 57638cd0b23b5f2bfd32fdc159d6cd77ca34e3bd695c225591979aef4b7271eac93d3706fa1ffa2340f90013267a4171bebe1e4c142f19ad2bf67963dfed627e
+    REPO gazebosim/gazebo-classic
+    REF "gazebo11_${VERSION}"
+    SHA512 0dede29618fc9d9a91d208a75b8ca1d3e6d3e8f4f60a80047b2d5806991f00f0bec46f6e2daca5931aed9c243f1e1d334e7a3eae9165b453cdedfb5b73b71186
     HEAD_REF gazebo11
     PATCHES
         0001-Fix-deps.patch
@@ -22,19 +22,25 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
         graphviz  NO_GRAPHVIZ_FEATURE
 )
 
-vcpkg_add_to_path("${CURRENT_INSTALLED_DIR}/debug/bin")
-vcpkg_add_to_path("${CURRENT_INSTALLED_DIR}/bin")
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
         -DUSE_EXTERNAL_TINY_PROCESS_LIBRARY=ON
-        -DPKG_CONFIG_EXECUTABLE=${CURRENT_HOST_INSTALLED_DIR}/tools/pkgconf/pkgconf.exe
+        "-DPKG_CONFIG_EXECUTABLE=${CURRENT_HOST_INSTALLED_DIR}/tools/pkgconf/pkgconf${VCPKG_HOST_EXECUTABLE_SUFFIX}"
         ${FEATURE_OPTIONS}
+        -DBUILD_TESTING=OFF  # Not enabled by default, but to be sure
 )
 
-vcpkg_cmake_install()
+vcpkg_cmake_install(ADD_BIN_TO_PATH)
 vcpkg_cmake_config_fixup(CONFIG_PATH "lib/cmake/gazebo")
 vcpkg_copy_pdbs()
+
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/include/gazebo-11/gazebo/test")
+
+foreach(postfix "" "-11")
+    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/share/${PORT}${postfix}/setup.sh" "${CURRENT_PACKAGES_DIR}" "`dirname $0`/../..")
+    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/share/${PORT}${postfix}/setup.sh" "${CURRENT_INSTALLED_DIR}" "`dirname $0`/../..")
+endforeach()
 
 vcpkg_copy_tools(
     TOOL_NAMES gazebo gz gzclient gzserver
@@ -48,5 +54,6 @@ endforeach()
 
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include" "${CURRENT_PACKAGES_DIR}/debug/share")
 
+vcpkg_fixup_pkgconfig()
 # Handle copyright
 file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)

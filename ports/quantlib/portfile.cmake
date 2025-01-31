@@ -1,8 +1,8 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO lballabio/QuantLib
-    REF QuantLib-v1.25
-    SHA512 9a08c3d825f85c93e7db74b31dc93d03d7ec487b7a09f86b6f3efb0404791e1b3e1ea19e06cea19fd04ab190d2e8eb7bad889660d47eb9988c36609967646aa3
+    REF "v${VERSION}"
+    SHA512 a3a3644f6b04ed82c3e94de523880618a8ffb9be7a3e181d4b40621dadb9fd16bdcad6e15653887d64aa325669b79fcb88faf2553c51521e3cbb96dc30fdf997
     HEAD_REF master
 )
 
@@ -14,17 +14,24 @@ endif()
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
-        -DQL_BUILD_BENCHMARK=OFF
         -DQL_BUILD_EXAMPLES=OFF
         -DQL_BUILD_TEST_SUITE=OFF
 )
 
 vcpkg_cmake_install()
 vcpkg_cmake_config_fixup(PACKAGE_NAME QuantLib CONFIG_PATH lib/cmake/QuantLib)
+vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
-# Install custom usage
-configure_file(${CMAKE_CURRENT_LIST_DIR}/usage ${CURRENT_PACKAGES_DIR}/share/${PORT}/usage @ONLY)
+
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 
+# Remove the "bin" directories if we are building static libraries
+if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
+    file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/bin" "${CURRENT_PACKAGES_DIR}/debug/bin")
+endif()
+
+# Install custom usage
+configure_file("${CMAKE_CURRENT_LIST_DIR}/usage" "${CURRENT_PACKAGES_DIR}/share/${PORT}/usage" @ONLY)
+
 # Handle copyright
-configure_file("${SOURCE_PATH}/LICENSE.TXT" "${CURRENT_PACKAGES_DIR}/share/${PORT}/copyright" COPYONLY)
+file(INSTALL "${SOURCE_PATH}/LICENSE.TXT" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)

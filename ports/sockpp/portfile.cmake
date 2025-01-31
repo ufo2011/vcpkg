@@ -3,16 +3,15 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO fpagliughi/sockpp
-    REF 4c57ef4a30a9d8e6fda89cf07410066d2cee12f8
-    SHA512 0b3031e792b2bc58d868b7dd2462c06f184547e4e094ce395ee1cd2496e1e505f767d8389ce17ecf3d8fb838abae8282c911201f1730cffbf0357a09addab776
+    REF "v${VERSION}"
+    SHA512 99191c9551ff345f96af9177d124c6e10f3da8e87021576058b63df82ee64461cb8fc134919fe390617200aebf222e70501e3cee43fc0a294596947669ed4f03
     HEAD_REF master
 )
 
-vcpkg_replace_string(${SOURCE_PATH}/CMakeLists.txt "\${SOCKPP}-static" "\${SOCKPP}")
+vcpkg_replace_string("${SOURCE_PATH}/CMakeLists.txt" "\${SOCKPP}-static" "\${SOCKPP}" IGNORE_UNCHANGED)
 
 vcpkg_cmake_configure(
-    SOURCE_PATH ${SOURCE_PATH}
-    PREFER_NINJA
+    SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
         -DSOCKPP_BUILD_SHARED=OFF
         -DSOCKPP_BUILD_STATIC=ON
@@ -23,9 +22,8 @@ vcpkg_cmake_configure(
 
 vcpkg_cmake_install()
 
-file(INSTALL ${SOURCE_PATH}/LICENSE DESTINATION ${CURRENT_PACKAGES_DIR}/share/${PORT} RENAME copyright)
-file(INSTALL ${CURRENT_PORT_DIR}/sockppConfig.cmake DESTINATION ${CURRENT_PACKAGES_DIR}/share/${PORT})
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/${PORT})
 
-file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 
-file(COPY ${CMAKE_CURRENT_LIST_DIR}/usage DESTINATION ${CURRENT_PACKAGES_DIR}/share/${PORT})
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
