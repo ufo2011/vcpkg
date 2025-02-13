@@ -2,13 +2,15 @@ vcpkg_from_gitlab(
     GITLAB_URL https://gitlab.freedesktop.org/
     OUT_SOURCE_PATH SOURCE_PATH
     REPO slirp/libslirp
-    REF v4.6.1
-    SHA512 04a9dd88cd58c849a24b9cff405d951952760d99ea2bef0b070463dff088d79f44557a13c9427ba0043f58d4b9e06b68ff64a4f23a7b0d66df594e32e1521cae
+    REF "v${VERSION}"
+    SHA512 eef9d77f1588c4e3dcf91cd53e54db235d624998fc64df75d389657411635f28bfcbe0c81cd3b0ede7792eea1eb7ef716b8a87a199a6be1e9a29da27ca4a1df4
     HEAD_REF master
 )
 
-vcpkg_acquire_msys(MSYS_ROOT)
-vcpkg_add_to_path("${MSYS_ROOT}/usr/bin")
+if(VCPKG_HOST_IS_WINDOWS)
+    vcpkg_acquire_msys(MSYS_ROOT)
+    vcpkg_add_to_path("${MSYS_ROOT}/usr/bin")
+endif()
 
 vcpkg_configure_meson(
     SOURCE_PATH "${SOURCE_PATH}"
@@ -22,4 +24,4 @@ vcpkg_fixup_pkgconfig()
 
 vcpkg_copy_pdbs()
 
-file(INSTALL "${SOURCE_PATH}/COPYRIGHT" DESTINATION "${CURRENT_PACKAGES_DIR}/share/libslirp" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/COPYRIGHT")

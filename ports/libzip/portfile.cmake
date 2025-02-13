@@ -1,11 +1,13 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO nih-at/libzip
-    REF v1.8.0
-    SHA512 f7a78ff6d964a485b8fe3dfb7a61afae69984e67367e6de78c3cb10f15a0904800a1aeca9d33b63bc24ca926fff98638914343a35e7c3a4c3ec8b7594fc25fc1
+    REF "v${VERSION}"
+    SHA512 cf7795ba52685bfc90cf4a3f993d29d6e27eabaca486098e04971fca31ab90a887194e6a77a5a9e19ade1a1d0855400c8108aa79724618f4204b1ba8d5e42c9d
     HEAD_REF master
     PATCHES
         fix-dependency.patch
+        use-requires.patch
+        initialize-have_dos_time.patch # https://github.com/nih-at/libzip/commit/aa3a6b4da7577de63581f8db2f9d2757481b4cc8
 )
 
 vcpkg_check_features(
@@ -37,7 +39,7 @@ vcpkg_copy_pdbs()
 vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/libzip)
 vcpkg_fixup_pkgconfig()
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
- 
+
 # Remove include directories from lib
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/lib/libzip" "${CURRENT_PACKAGES_DIR}/debug/lib/libzip")
 
@@ -45,4 +47,4 @@ file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/lib/libzip" "${CURRENT_PACKAGES_DIR
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 
 # Copy copright information
-file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")

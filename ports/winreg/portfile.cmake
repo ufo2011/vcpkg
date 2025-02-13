@@ -1,8 +1,10 @@
+# WinReg - Header-only library
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO GiovanniDicanio/WinReg
-    REF bcdce7361be8409887adac6f6b5cb0a436a489aa #v5.0.0
-    SHA512 8a112cc505ba9ec4431e80ee77b6a08389ea8ed92c2d75be191e2494818913ad01d6b4cc0ccf213dd2dd3455594434ba3876fa385e71bdbb758797672c844d8d
+    REF "v${VERSION}"
+    SHA512 174d5ff3c08825990663159e91b9150f5a792591a4ee9e7f08facde124e212456df8b52c3fb50239363a2a2b43986678fde3880ca81e19c4c51e0f2ebddfef8c
     HEAD_REF master
 )
 
@@ -10,4 +12,4 @@ vcpkg_from_github(
 file(COPY "${SOURCE_PATH}/WinReg/WinReg.hpp" DESTINATION "${CURRENT_PACKAGES_DIR}/include/${PORT}")
 
 # Handle copyright
-file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
