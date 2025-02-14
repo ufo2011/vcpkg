@@ -1,12 +1,26 @@
+# NOTE: All changes made to this file will get overwritten by the next port release.
+# Please contribute your changes to https://github.com/Azure/azure-sdk-for-cpp.
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Azure/azure-sdk-for-cpp
-    REF azure-storage-files-shares_12.2.1
-    SHA512 c3fd61496833fd90984c20c3ec6f3be663dda922458a7984ce6010c82df28a546f2e24f7d3690f327b22dbdf2abc669f12ebc182f43ba171111ece0450dbe35c
+    REF "azure-storage-files-shares_${VERSION}"
+    SHA512 296e0798c9a831ba16bcfd9b29d2bc8613a2b7d6a117bfccb46f49f4d5d91caf8e1fbb82465dca5daae3305656cf44bee2f78ad0341a8e13b36940938317b45c
+    HEAD_REF main
 )
 
+if(EXISTS "${SOURCE_PATH}/sdk/storage/azure-storage-files-shares")
+  file(REMOVE_RECURSE "${SOURCE_PATH}/sdk/storage/_")
+  file(REMOVE_RECURSE "${SOURCE_PATH}/sdk/_")
+  file(REMOVE_RECURSE "${SOURCE_PATH}/_")
+
+  file(RENAME "${SOURCE_PATH}/sdk/storage/azure-storage-files-shares" "${SOURCE_PATH}/sdk/storage/_")
+  file(RENAME "${SOURCE_PATH}/sdk/storage" "${SOURCE_PATH}/sdk/_")
+  file(RENAME "${SOURCE_PATH}/sdk" "${SOURCE_PATH}/_")
+endif()
+
 vcpkg_cmake_configure(
-    SOURCE_PATH ${SOURCE_PATH}/sdk/storage/azure-storage-files-shares/
+    SOURCE_PATH "${SOURCE_PATH}/_/_/_"
     OPTIONS
         -DWARNINGS_AS_ERRORS=OFF
 )

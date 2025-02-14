@@ -1,11 +1,10 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO emweb/wt
-    REF bc76cbea5bb845c4d0fb642968eb1b278ddbb047 # 4.6.1
-    SHA512 416baaaf89cdbe2e9cf234df44dc0b90493c995b52ca9840cb5a5acf2904fe7d81da178ac4e0bf06dcd44fbac74fa75fe570901dd8fd4987a1bec4aeb54baad6
+    REF "${VERSION}"
+    SHA512 e512c88616878b8fa3b992aa9d2f232d994ee6108607af4e5d511a2fecd7ae35cf33a63435a0ff356df715b386f2061731dcfb28c529bc43c901f17787686f34
     HEAD_REF master
     PATCHES
-        0002-link-glew.patch
         0005-XML_file_path.patch
         0006-GraphicsMagick.patch
 )
@@ -50,7 +49,6 @@ vcpkg_cmake_configure(
         -DINSTALL_CONFIG_FILE_PATH="${DOWNLOADS}/wt"
         -DSHARED_LIBS=${SHARED_LIBS}
         -DBOOST_DYNAMIC=${SHARED_LIBS}
-        -DDISABLE_BOOST_AUTOLINK=ON
         -DBUILD_EXAMPLES=OFF
         -DBUILD_TESTS=OFF
 
@@ -71,12 +69,15 @@ vcpkg_cmake_configure(
         ${WT_PLATFORM_SPECIFIC_OPTIONS}
 
         -DUSE_SYSTEM_SQLITE3=ON
-        -DUSE_SYSTEM_GLEW=ON
 
         -DCMAKE_INSTALL_DIR=share
         # see https://redmine.webtoolkit.eu/issues/9646
         -DWTHTTP_CONFIGURATION=
         -DCONFIGURATION=
+        
+        "-DUSERLIB_PREFIX=${CURRENT_INSTALLED_DIR}"
+    MAYBE_UNUSED_VARIABLES
+        USE_SYSTEM_SQLITE3
 
 )
 
@@ -89,7 +90,9 @@ file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include" "${CURRENT_PACKAGES_
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/var" "${CURRENT_PACKAGES_DIR}/debug/var")
 
 # RUNDIR is only used for wtfcgi what we don't build. See https://redmine.webtoolkit.eu/issues/9646
-vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/include/Wt/WConfig.h" "#define RUNDIR \"${CURRENT_PACKAGES_DIR}/var/run/wt\"" "")
+file(READ "${CURRENT_PACKAGES_DIR}/include/Wt/WConfig.h" W_CONFIG_H)
+string(REGEX REPLACE "([\r\n])#define RUNDIR[^\r\n]+" "\\1// RUNDIR intentionally unset by vcpkg" W_CONFIG_H "${W_CONFIG_H}")
+file(WRITE "${CURRENT_PACKAGES_DIR}/include/Wt/WConfig.h" "${W_CONFIG_H}")
 
-file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
 vcpkg_copy_pdbs()
