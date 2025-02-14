@@ -1,39 +1,40 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO libuv/libuv
-    REF v1.43.0
-    SHA512 66ee11f8f6fc1313c432858572789cf67acd6364b29a06c73323ab20626e2d6e3d3dcea748cf5d9d4368b40ad7fe0d5fd35e9369c22e531db523703f005248d3
+    REF "v${VERSION}"
+    SHA512 9073d9dcd17980a57c76030fb8a273300e06c25dc6494a9b1e7b16d849340820bd8188b8247cc5505b5a480ea9c56d970321c6a15c219c50c75c8a83b5ee4fb4
     HEAD_REF v1.x
+    PATCHES
+        fix-build-type.patch
+        ssize_t.patch
 )
 
-file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
+string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "dynamic" LIBUV_BUILD_SHARED)
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
-    OPTIONS_DEBUG
-        -DUV_SKIP_HEADERS=ON
+    OPTIONS
+        -DLIBUV_BUILD_TESTS=OFF
+        -DLIBUV_BUILD_BENCH=OFF
+        -DLIBUV_BUILD_SHARED=${LIBUV_BUILD_SHARED}
+        -DQEMU=OFF
+        -DASAN=OFF
+        -DTSAN=OFF
 )
 
 vcpkg_cmake_install()
-vcpkg_cmake_config_fixup(PACKAGE_NAME unofficial-libuv CONFIG_PATH share/unofficial-libuv)
 vcpkg_copy_pdbs()
 
-file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/libuv)
+vcpkg_fixup_pkgconfig()
 
-configure_file(
-    "${CMAKE_CURRENT_LIST_DIR}/unofficial-libuv-config.in.cmake"
-    "${CURRENT_PACKAGES_DIR}/share/unofficial-libuv/unofficial-libuv-config.cmake"
-    @ONLY
-)
-
-file(READ "${CURRENT_PACKAGES_DIR}/include/uv.h" UV_H)
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "dynamic")
-    string(REPLACE "defined(USING_UV_SHARED)" "1" UV_H "${UV_H}")
+    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/include/uv.h" "defined(USING_UV_SHARED)" "1")
 else()
-    string(REPLACE "defined(USING_UV_SHARED)" "0" UV_H "${UV_H}")
-    configure_file("${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake" "${CURRENT_PACKAGES_DIR}/share/${PORT}/vcpkg-cmake-wrapper.cmake" @ONLY)
+    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/include/uv.h" "defined(USING_UV_SHARED)" "0")
 endif()
-file(WRITE "${CURRENT_PACKAGES_DIR}/include/uv.h" "${UV_H}")
 
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share" "${CURRENT_PACKAGES_DIR}/debug/include")
+
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
 file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
-

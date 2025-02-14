@@ -1,23 +1,33 @@
-if (VCPKG_TARGET_IS_WINDOWS)
+if(VCPKG_TARGET_IS_WINDOWS)
     vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 endif()
+
+# Convert PcapPlusPlus to add leading zero 23.9 => 23.09
+string(REGEX REPLACE "^([0-9]+)[.]([0-9])\$" "\\1.0\\2" PCAPPLUSPLUS_VERSION "${VERSION}")
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO seladb/PcapPlusPlus
-    REF v21.11
-    SHA512 ad10034950c0c3e6a4638e8b314c8983ce42609948d7d8d40ad0ff678820a2469807bd29aff77e657a150008602475b50cea84a0766ad87ea203985519cb38ac
+    REF "v${PCAPPLUSPLUS_VERSION}"
+    SHA512 ae68a61a41915b1272aa7f8d1b70889216ea50e966c594d408d79fbca2667ff5aa073fe21a72c7e0916f744a925ac1e85e1d1f02e458b3f289201b88c8101fa3
     HEAD_REF master
+    PATCHES
+        0001-warn-STL4043-for-v23.09.patch # just workaround, which has been fixed on mainline
 )
-file(COPY "${CURRENT_PORT_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
+    OPTIONS
+        -DPCAPPP_BUILD_EXAMPLES=OFF
 )
 
 vcpkg_cmake_install()
+vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/pcapplusplus)
+vcpkg_fixup_pkgconfig()
 vcpkg_copy_pdbs()
 
-file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include" "${CURRENT_PACKAGES_DIR}/debug/share")
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share"
+                    "${CURRENT_PACKAGES_DIR}/debug/include"
+)
 
-file(RENAME "${CURRENT_PACKAGES_DIR}/share/${PORT}/LICENSE" "${CURRENT_PACKAGES_DIR}/share/${PORT}/copyright")
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")

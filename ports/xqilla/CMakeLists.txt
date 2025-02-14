@@ -1,13 +1,15 @@
 cmake_minimum_required(VERSION 3.21)
 cmake_policy(VERSION 3.21)
 
-if (XQILLA_STATIC)
-  add_definitions("-DXQILLA_API=")
-else()
+if (BUILD_SHARED_LIBS)
   add_definitions("-DXQILLA_APIS=")
+else()
+  add_definitions("-DXQILLA_API=")
 endif()
 
 project(xqilla C CXX)
+
+set(CMAKE_CXX_STANDARD 11) # 17 does not allow 'register'
 
 add_library(xqilla  
 ./src/exceptions/XQException.cpp
@@ -430,8 +432,10 @@ find_package(XercesC REQUIRED)
 target_include_directories(xqilla PRIVATE "${XercesC_INCLUDE_DIRS}")
 target_include_directories(xqilla PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-if (NOT XQILLA_STATIC)
-  target_link_libraries(xqilla PUBLIC debug "${XercesC_LIBRARY_DEBUG}")
+if (BUILD_SHARED_LIBS)
+  if(XercesC_LIBRARY_DEBUG)
+    target_link_libraries(xqilla PUBLIC debug "${XercesC_LIBRARY_DEBUG}")
+  endif()
   target_link_libraries(xqilla PUBLIC optimized "${XercesC_LIBRARY_RELEASE}")
 endif()
 
@@ -454,5 +458,4 @@ install(
     DESTINATION share/unofficial-xqilla
     FILE unofficial-xqillaConfig.cmake
     NAMESPACE unofficial::xqilla::
-    CONFIGURATIONS Release
 )

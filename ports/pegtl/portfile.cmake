@@ -1,9 +1,9 @@
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO taocpp/pegtl
-    REF 3.2.5
-    SHA512 e531eaeef614d822e4bddbc6662fbe116cc1536fa308109f28ce5433607e6102f4e754a31094f9c349e4319914da6c83450dd2e8fa10dcfc3eee5a5dca547c14
-    HEAD_REF main
+    REF "${VERSION}"
+    SHA512 aecf9396edbdd65549603484d1841cd676b197d164ee2979ee5acaf657da4fa9ebc1a59fc8550cfa440ce27794cdc59cdf86a6521e4bda084c0600cb2c92f5cf
+    HEAD_REF 3.x
 )
 
 vcpkg_cmake_configure(
